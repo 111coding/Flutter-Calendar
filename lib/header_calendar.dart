@@ -45,7 +45,6 @@ class HeaderCalendarPage extends StatelessWidget {
       );
 
   Widget _calendarHeader() {
-    int index = swiperController.index ?? 0;
     return Padding(
       padding: const EdgeInsets.only(top: 16, bottom: 12, left: 16, right: 16),
       child: SizedBox(
@@ -54,7 +53,9 @@ class HeaderCalendarPage extends StatelessWidget {
           children: [
             GestureDetector(
               onTap: () {
-                swiperController.previous();
+                if (controller.swiperIndex > 0) {
+                  swiperController.previous();
+                }
               },
               child: Container(
                 color: Colors.red,
@@ -76,7 +77,9 @@ class HeaderCalendarPage extends StatelessWidget {
             ),
             GestureDetector(
               onTap: () {
-                swiperController.next();
+                if (controller.swiperIndex < 24) {
+                  swiperController.next();
+                }
               },
               child: Container(
                 color: Colors.red,
@@ -117,12 +120,18 @@ class HeaderCalendarPage extends StatelessWidget {
                     width: double.infinity,
                     child: Swiper(
                       controller: swiperController,
+                      loop: false,
                       onIndexChanged: (i) {
+                        controller.swiperIndex = i;
                         controller.currentDate.value = DateTime(
                             controller.baseDate.value.year,
-                            controller.baseDate.value.month + i);
+                            controller.baseDate.value.month + (i - 13));
                         controller.heightChanged();
                       },
+                      index: controller.swiperIndex,
+                      itemCount: 25,
+                      itemWidth: double.infinity,
+                      layout: SwiperLayout.DEFAULT,
                       itemBuilder: (BuildContext context, int index) {
                         return Opacity(
                           opacity: 1,
@@ -137,7 +146,8 @@ class HeaderCalendarPage extends StatelessWidget {
                                 MyCalendar(
                                   dateTime: DateTime(
                                       controller.baseDate.value.year,
-                                      controller.baseDate.value.month + index),
+                                      controller.baseDate.value.month +
+                                          (index - 13)),
                                   onClick: (v) {},
                                 )
                               ],
@@ -145,9 +155,6 @@ class HeaderCalendarPage extends StatelessWidget {
                           ),
                         );
                       },
-                      itemCount: 10,
-                      itemWidth: double.infinity,
-                      layout: SwiperLayout.DEFAULT,
                     ),
                   )
                 : Container(
@@ -155,31 +162,6 @@ class HeaderCalendarPage extends StatelessWidget {
                     height: controller.horizontalCalendarHeight,
                     color: Colors.blue,
                   ),
-
-            // controller.isOpend.value
-            //     ? Opacity(
-            //         opacity: 1,
-            //         child: SizedBox(
-            //           height: controller.topHeight.value -
-            //               controller.minHeight +
-            //               controller.horizontalCalendarHeight,
-            //           child: ListView(
-            //             physics: const NeverScrollableScrollPhysics(),
-            //             padding: EdgeInsets.zero,
-            //             children: [
-            //               MyCalendar(
-            //                 dateTime: controller.calendarDate.value,
-            //                 onClick: (v) {},
-            //               )
-            //             ],
-            //           ),
-            //         ),
-            //       )
-            //     : Container(
-            //         width: double.infinity,
-            //         height: controller.horizontalCalendarHeight,
-            //         color: Colors.blue,
-            //       ),
             const Spacer(),
             _touchContainer(),
           ],
@@ -225,6 +207,8 @@ class HeaderCalendarPageController extends GetxController
   DateTime selectedDate = DateTime.now();
   Rx<DateTime> baseDate = Rx(DateTime.now());
   Rx<DateTime> currentDate = Rx(DateTime.now());
+
+  int swiperIndex = 13;
 
   @override
   void onInit() {
