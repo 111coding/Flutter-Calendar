@@ -1,7 +1,6 @@
 import 'package:card_swiper/card_swiper.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:test_area/my_calendar.dart';
 
 class HeaderCalendarPage extends StatelessWidget {
   HeaderCalendarPage({Key? key}) : super(key: key);
@@ -11,6 +10,86 @@ class HeaderCalendarPage extends StatelessWidget {
 
   final SwiperController swiperController = SwiperController();
 
+  Widget _calendar(BuildContext context, DateTime yearMonth) {
+    int year = yearMonth.year;
+    int month = yearMonth.month;
+
+    double defaultWidth = MediaQuery.of(context).size.width - 32;
+    double dayWidth = defaultWidth / 7 - 1;
+
+    int firstdayWeek = DateTime(year, month, 0).weekday + 1;
+    if (firstdayWeek == 7) {
+      firstdayWeek = 0;
+    }
+    firstdayWeek %= 7;
+    int lastday = DateTime(year, month + 1, 0).day;
+
+    List<Widget> days = [];
+
+    int totalI = 0;
+
+    for (int i = 0; i < firstdayWeek; i++) {
+      days.add(SizedBox(
+        width: dayWidth,
+        height: 40,
+      ));
+      totalI++;
+    }
+
+    for (int i = 0; i < lastday; i++) {
+      Color c = totalI % 7 == 0
+          ? const Color(0xFFF60000)
+          : totalI % 7 == 6
+              ? Colors.blue
+              : const Color(0xFF2B2B2B);
+
+      Color bgColor = const Color(0xFFFFFFFF);
+      if (i + 1 == controller.selectedDate.day &&
+          year == controller.selectedDate.year &&
+          month == controller.selectedDate.month) {
+        c = const Color(0xFFFFFFFF);
+        bgColor = const Color(0xFF2971FC);
+      }
+
+      days.add(GestureDetector(
+        onTap: () {
+          if (year == yearMonth.year && month == yearMonth.month)
+            controller.selectedDate = yearMonth.copyWith(day: i + 1);
+        },
+        child: Container(
+          alignment: Alignment.center,
+          width: dayWidth,
+          height: 44,
+          child: Container(
+            width: 29,
+            height: 29,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: bgColor,
+            ),
+            child: Text("${i + 1}",
+                style: TextStyle(
+                  fontSize: 13,
+                  color: c,
+                )),
+          ),
+        ),
+      ));
+      totalI++;
+    }
+    return SizedBox(
+      width: defaultWidth,
+      child: Column(
+        children: [
+          Wrap(
+            children: days,
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _touchContainer() => GestureDetector(
         onVerticalDragStart: (details) {
           controller.verticleDragStartDy = details.globalPosition.dy;
@@ -18,12 +97,12 @@ class HeaderCalendarPage extends StatelessWidget {
         onVerticalDragUpdate: (details) {
           double movingY =
               controller.verticleDragStartDy - details.globalPosition.dy;
-          double nextHeight = controller.isOpend.value
+          double nextHeight = controller.isOpend
               ? controller.maxHeight - movingY
               : controller.minHeight - movingY;
           if (nextHeight > controller.minHeight &&
               nextHeight <= controller.maxHeight)
-            controller.topHeight.value = nextHeight;
+            controller.topHeight = nextHeight;
         },
         onVerticalDragEnd: (details) {
           controller.startAnimation();
@@ -67,7 +146,7 @@ class HeaderCalendarPage extends StatelessWidget {
               child: Container(
                 alignment: Alignment.center,
                 child: Text(
-                  "${controller.currentDate.value.year}년 ${controller.currentDate.value.month}월",
+                  "${controller.currentMonth.year}년 ${controller.currentMonth.month}월",
                   style: const TextStyle(
                     color: Color(0xD9000000),
                     fontSize: 18,
@@ -93,11 +172,11 @@ class HeaderCalendarPage extends StatelessWidget {
     );
   }
 
-  Widget _calendar(context) {
-    return Obx(
-      () => Container(
+  Widget _body(context) {
+    return GetBuilder<HeaderCalendarPageController>(
+      builder: (c) => Container(
         width: double.infinity,
-        height: controller.topHeight.value,
+        height: controller.topHeight,
         decoration: const BoxDecoration(
           color: Color(0xFFFFFFFF),
           borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
@@ -112,9 +191,9 @@ class HeaderCalendarPage extends StatelessWidget {
         child: Column(
           children: [
             _calendarHeader(), // 54 = 16+12+26 TOP, BOTTOM, BODY
-            controller.isOpend.value
+            controller.isOpend
                 ? SizedBox(
-                    height: controller.topHeight.value -
+                    height: controller.topHeight -
                         controller.minHeight +
                         controller.horizontalCalendarHeight,
                     width: double.infinity,
@@ -123,9 +202,9 @@ class HeaderCalendarPage extends StatelessWidget {
                       loop: false,
                       onIndexChanged: (i) {
                         controller.swiperIndex = i;
-                        controller.currentDate.value = DateTime(
-                            controller.baseDate.value.year,
-                            controller.baseDate.value.month + (i - 13));
+                        controller.currentMonth = DateTime(
+                            controller.baseDate.year,
+                            controller.baseDate.month + (i - 13));
                         controller.heightChanged();
                       },
                       index: controller.swiperIndex,
@@ -136,20 +215,18 @@ class HeaderCalendarPage extends StatelessWidget {
                         return Opacity(
                           opacity: 1,
                           child: SizedBox(
-                            height: controller.topHeight.value -
+                            height: controller.topHeight -
                                 controller.minHeight +
                                 controller.horizontalCalendarHeight,
                             child: ListView(
                               physics: const NeverScrollableScrollPhysics(),
                               padding: EdgeInsets.zero,
                               children: [
-                                MyCalendar(
-                                  dateTime: DateTime(
-                                      controller.baseDate.value.year,
-                                      controller.baseDate.value.month +
-                                          (index - 13)),
-                                  onClick: (v) {},
-                                )
+                                _calendar(
+                                    context,
+                                    controller.baseDate.copyWith(
+                                        month: controller.baseDate.month +
+                                            (index - 13)))
                               ],
                             ),
                           ),
@@ -183,7 +260,7 @@ class HeaderCalendarPage extends StatelessWidget {
       backgroundColor: backgroundColor,
       body: Column(
         children: [
-          _calendar(context),
+          _body(context),
         ],
       ),
     );
@@ -192,23 +269,49 @@ class HeaderCalendarPage extends StatelessWidget {
 
 class HeaderCalendarPageController extends GetxController
     with SingleGetTickerProviderMixin {
+  int swiperIndex = 13; // 전후 1년씩 12 m 12 => Total 25, center 13
+
   late AnimationController _animationController;
 
-  final double horizontalCalendarHeight = 44;
-  final double touchHeight = 20;
-
-  DateTime today = DateTime.now();
   double verticleDragStartDy = 0;
   double maxHeight = 350.0;
   final double minHeight =
       118; // horizontalCalendarHeight 44 + 54(라벨) + 20(터치영역)
-  RxDouble topHeight = 350.0.obs;
-  RxBool isOpend = true.obs;
-  DateTime selectedDate = DateTime.now();
-  Rx<DateTime> baseDate = Rx(DateTime.now());
-  Rx<DateTime> currentDate = Rx(DateTime.now());
+  double _topHeight = 350.0;
+  set topHeight(double v) {
+    _topHeight = v;
+    update();
+  }
 
-  int swiperIndex = 13;
+  double get topHeight => _topHeight;
+
+  final double horizontalCalendarHeight = 44;
+  final double touchHeight = 20;
+
+  bool isOpend = true;
+
+  // 현재 선택된 날짜
+  DateTime _selectedDate = DateTime.now();
+  DateTime get selectedDate => _selectedDate;
+  set selectedDate(DateTime v) {
+    _selectedDate = v;
+    update();
+  }
+
+  // Swiper Index +-될 기준 날짜
+  DateTime baseDate = DateTime.now();
+
+  // 현재 달력에 표시되고 있는 날짜
+  DateTime _currentMonth = DateTime.now();
+  DateTime get currentMonth => _currentMonth;
+  set currentMonth(DateTime v) {
+    _currentMonth = v;
+    maxHeight = (v.weekOfMonth * 40) +
+        minHeight -
+        horizontalCalendarHeight +
+        touchHeight;
+    heightChanged();
+  }
 
   @override
   void onInit() {
@@ -218,43 +321,35 @@ class HeaderCalendarPageController extends GetxController
         vsync: this, duration: const Duration(milliseconds: 300));
 
     _animationController.addListener(() {
-      topHeight.value =
+      topHeight =
           _animationController.value * (maxHeight - minHeight) + minHeight;
+      update();
     });
 
     _animationController.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
-        isOpend.value = true;
+        isOpend = true;
       } else if (status == AnimationStatus.dismissed) {
-        isOpend.value = false;
+        isOpend = false;
       }
     });
-
-    ever(currentDate, (DateTime v) {
-      maxHeight = (v.weekOfMonth * 40) +
-          minHeight -
-          horizontalCalendarHeight +
-          touchHeight;
-
-      heightChanged();
-    });
-    currentDate.value = DateTime.now();
+    // 최초 높이 알기위해
+    currentMonth = currentMonth;
   }
 
   void startAnimation() {
-    double basePosition = isOpend.value ? maxHeight * 0.7 : maxHeight / 2;
-    if (topHeight.value > basePosition) {
+    double basePosition = isOpend ? maxHeight * 0.7 : maxHeight / 2;
+    if (topHeight > basePosition) {
       // 펼치기
       _animationController.forward(from: 1 - minHeight / maxHeight);
     } else {
       // 접기
-      _animationController.reverse(
-          from: (topHeight.value - minHeight) / maxHeight);
+      _animationController.reverse(from: (topHeight - minHeight) / maxHeight);
     }
   }
 
   void heightChanged() {
-    _animationController.forward(from: topHeight.value / maxHeight);
+    _animationController.forward(from: topHeight / maxHeight);
   }
 }
 
@@ -269,5 +364,27 @@ extension DateTimeExtension on DateTime {
     weeksCount += ((weekday + modDays) / 7).ceil();
 
     return weeksCount;
+  }
+
+  DateTime copyWith({
+    int? year,
+    int? month,
+    int? day,
+    int? hour,
+    int? minute,
+    int? second,
+    int? millisecond,
+    int? microsecond,
+  }) {
+    return DateTime(
+      year ?? this.year,
+      month ?? this.month,
+      day ?? this.day,
+      hour ?? this.hour,
+      minute ?? this.minute,
+      second ?? this.second,
+      millisecond ?? this.millisecond,
+      microsecond ?? this.microsecond,
+    );
   }
 }
