@@ -276,103 +276,108 @@ class HeaderCalendarPage extends GetView<HeaderCalendarPageController> {
                       ),
                     ),
                   ),
-                  Opacity(
-                    opacity: 1 -
-                        (controller.topHeight - controller.minHeight) /
-                            (controller.maxHeight - controller.minHeight),
-                    child: SizedBox(
-                      width: double.infinity,
-                      height: controller.horizontalCalendarHeight,
-                      child: NotificationListener(
-                        onNotification: (Notification n) {
-                          if (n is ScrollUpdateNotification) {
-                            for (var ip in controller
-                                .itemPositionsListener.itemPositions.value) {
-                              if (ip.itemLeadingEdge <= 0.5 &&
-                                  ip.itemTrailingEdge >= 0.5) {
-                                DateTime d = controller.baseDate.copyWith(
-                                    day: controller.baseDate.day +
-                                        ip.index -
-                                        (controller.totalDay() / 2).ceil());
+                  IgnorePointer(
+                    ignoring: controller.isOpend,
+                    child: Opacity(
+                      opacity: 1 -
+                          (controller.topHeight - controller.minHeight) /
+                              (controller.maxHeight - controller.minHeight),
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: controller.horizontalCalendarHeight,
+                        child: NotificationListener(
+                          onNotification: (Notification n) {
+                            if (n is ScrollUpdateNotification) {
+                              for (var ip in controller
+                                  .itemPositionsListener.itemPositions.value) {
+                                if (ip.itemLeadingEdge <= 0.5 &&
+                                    ip.itemTrailingEdge >= 0.5) {
+                                  DateTime d = controller.baseDate.copyWith(
+                                      day: controller.baseDate.day +
+                                          ip.index -
+                                          (controller.totalDay() / 2).ceil());
 
-                                if (d.month != controller.currentMonth.month) {
-                                  controller.currentMonth = d;
+                                  if (d.month !=
+                                      controller.currentMonth.month) {
+                                    controller.currentMonth = d;
+                                  }
+                                  return false;
                                 }
-                                return false;
                               }
                             }
-                          }
-                          return false;
-                        },
-                        child: ScrollablePositionedList.builder(
-                          scrollDirection: Axis.horizontal,
-                          initialScrollIndex:
-                              (controller.totalDay() / 2).ceil(),
-                          initialAlignment:
-                              0.5 - (controller.hWidth / 2) / Get.width, //센터
-                          itemScrollController: controller.itemScrollController,
-                          itemPositionsListener:
-                              controller.itemPositionsListener,
-                          itemCount: controller.totalDay(),
-                          itemBuilder: (context, index) {
-                            int center = (controller.totalDay() / 2).ceil();
-                            DateTime baseDate = controller.baseDate;
-                            DateTime date = baseDate.copyWith(
-                                day: baseDate.day - (center - index));
-
-                            Color c = date.weekday == 7
-                                ? const Color(0xFFF60000)
-                                : date.weekday == 6
-                                    ? Colors.blue
-                                    : const Color(0xFF2B2B2B);
-                            Color bgColor = const Color(0xFFFFFFFF);
-                            if (date.equal(controller.selectedDate)) {
-                              c = const Color(0xFFFFFFFF);
-                              bgColor = const Color(0xFF2971FC);
-                            }
-                            return Container(
-                              alignment: Alignment.center,
-                              width: controller.hWidth,
-                              color: Colors.transparent,
-                              height: controller.horizontalCalendarHeight,
-                              child: GestureDetector(
-                                onTap: () {
-                                  controller.selectedDate = date;
-                                },
-                                child: Column(
-                                  children: [
-                                    SizedBox(
-                                      height: 18,
-                                      child: Text(
-                                        "${date.dayName()}",
-                                        style: const TextStyle(
-                                          fontSize: 13,
-                                          color: Color(0x61000000),
-                                        ),
-                                      ),
-                                    ),
-                                    Container(
-                                      margin: const EdgeInsets.only(top: 5),
-                                      width: 29,
-                                      height: 29,
-                                      alignment: Alignment.center,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        color: bgColor,
-                                      ),
-                                      child: Text(
-                                        "${date.day}",
-                                        style: TextStyle(
-                                          fontSize: 13,
-                                          color: c,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
+                            return false;
                           },
+                          child: ScrollablePositionedList.builder(
+                            scrollDirection: Axis.horizontal,
+                            initialScrollIndex:
+                                (controller.totalDay() / 2).ceil(),
+                            initialAlignment:
+                                0.5 - (controller.hWidth / 2) / Get.width, //센터
+                            itemScrollController:
+                                controller.itemScrollController,
+                            itemPositionsListener:
+                                controller.itemPositionsListener,
+                            itemCount: controller.totalDay(),
+                            itemBuilder: (context, index) {
+                              int center = (controller.totalDay() / 2).ceil();
+                              DateTime baseDate = controller.baseDate;
+                              DateTime date = baseDate.copyWith(
+                                  day: baseDate.day - (center - index));
+
+                              Color c = date.weekday == 7
+                                  ? const Color(0xFFF60000)
+                                  : date.weekday == 6
+                                      ? Colors.blue
+                                      : const Color(0xFF2B2B2B);
+                              Color bgColor = const Color(0xFFFFFFFF);
+                              if (date.equal(controller.selectedDate)) {
+                                c = const Color(0xFFFFFFFF);
+                                bgColor = const Color(0xFF2971FC);
+                              }
+                              return Container(
+                                alignment: Alignment.center,
+                                width: controller.hWidth,
+                                color: Colors.transparent,
+                                height: controller.horizontalCalendarHeight,
+                                child: GestureDetector(
+                                  onTap: () {
+                                    controller.selectedDate = date;
+                                  },
+                                  child: Column(
+                                    children: [
+                                      SizedBox(
+                                        height: 18,
+                                        child: Text(
+                                          "${date.dayName()}",
+                                          style: const TextStyle(
+                                            fontSize: 13,
+                                            color: Color(0x61000000),
+                                          ),
+                                        ),
+                                      ),
+                                      Container(
+                                        margin: const EdgeInsets.only(top: 5),
+                                        width: 29,
+                                        height: 29,
+                                        alignment: Alignment.center,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: bgColor,
+                                        ),
+                                        child: Text(
+                                          "${date.day}",
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            color: c,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
                         ),
                       ),
                     ),
